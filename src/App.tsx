@@ -1,12 +1,11 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import ConversationsPanel from './components/conversations-panel'
+import AdminPanel from './components/AdminPanel';
+import './style/AdminPanel.css';
 
 function App() {
   return (
     <div className="App">
-      <ConversationsPanel />
+      <AdminPanel />
     </div>
   );
 }
