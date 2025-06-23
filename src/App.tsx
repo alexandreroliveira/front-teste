@@ -1,5 +1,3 @@
-// src/App.tsx
-import React, { useState } from 'react';
 import ModernAdminPanel from './components/ModernAdminPanel';
 import './style/AdminPanel.css';
 

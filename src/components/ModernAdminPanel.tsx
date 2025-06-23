@@ -136,7 +136,7 @@ const ModernAdminPanel: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [configClient, setConfigClient] = useState<ConfigClient | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [newMessage, setNewMessage] = useState('');
+  // const [newMessage, setNewMessage] = useState('');
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
   useEffect(() => {
@@ -262,33 +262,33 @@ const ModernAdminPanel: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation) return;
+  // const handleSendMessage = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!newMessage.trim() || !selectedConversation) return;
 
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/conversations/${selectedConversation.identifier}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          content: newMessage,
-          role: 'assistant'
-        })
-      });
+  //   try {
+  //     const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/conversations/${selectedConversation.identifier}/messages`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       body: JSON.stringify({
+  //         content: newMessage,
+  //         role: 'assistant'
+  //       })
+  //     });
 
-      if (!response.ok) throw new Error('Falha ao enviar mensagem');
+  //     if (!response.ok) throw new Error('Falha ao enviar mensagem');
 
-      // Limpa o campo de mensagem
-      setNewMessage('');
+  //     // Limpa o campo de mensagem
+  //     setNewMessage('');
       
-      // Atualiza as mensagens
-      await fetchConversationDetails(selectedConversation.identifier);
-    } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
-    }
-  };
+  //     // Atualiza as mensagens
+  //     await fetchConversationDetails(selectedConversation.identifier);
+  //   } catch (error) {
+  //     console.error('Erro ao enviar mensagem:', error);
+  //   }
+  // };
 
   const formatPhoneNumber = (phone: string) => {
     // Extrai o número do identificador (formato: 123@c.us)

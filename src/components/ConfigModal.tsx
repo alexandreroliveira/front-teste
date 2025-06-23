@@ -1,5 +1,5 @@
 // src/components/ConfigModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ConfigClient } from '../clients/configClient';
 
 interface ConfigModalProps {
@@ -24,13 +24,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, configClient
   const [newConfigDescription, setNewConfigDescription] = useState<string>('');
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadConfigs();
-    }
-  }, [isOpen]);
-
-  const loadConfigs = async () => {
+  const loadConfigs = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -42,7 +36,13 @@ const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, configClient
     } finally {
       setLoading(false);
     }
-  };
+  }, [configClient]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadConfigs();
+    }
+  }, [isOpen, loadConfigs]);
 
   const handleSaveEdit = async () => {
     if (!editingConfig) return;
