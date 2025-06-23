@@ -138,6 +138,11 @@ const ModernAdminPanel: React.FC = () => {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   // const [newMessage, setNewMessage] = useState('');
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  
+  // Estados para responsividade móvel
+  const [isMobile, setIsMobile] = useState(false);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'conversations' | 'chat'>('dashboard');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     // Inicializa o cliente de configuração
@@ -155,6 +160,18 @@ const ModernAdminPanel: React.FC = () => {
     }, 30000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Hook para detectar mudanças no tamanho da tela
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const fetchConversations = async () => {
@@ -198,11 +215,14 @@ const ModernAdminPanel: React.FC = () => {
       
       const data = await response.json();
       if (data.success && data.data) {
+        // Atualiza os dados da conversa selecionada
         setSelectedConversation(data.data.thread);
-        setMessages(data.data.messages);
+        setMessages(data.data.messages || []);
       }
     } catch (error) {
       console.error(`Erro ao buscar detalhes da conversa ${identifier}:`, error);
+      // Em caso de erro, define mensagens como array vazio
+      setMessages([]);
     } finally {
       setIsLoadingMessages(false);
     }
@@ -329,10 +349,65 @@ const ModernAdminPanel: React.FC = () => {
     conv.identifier.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Funções para navegação móvel
+  const handleConversationClick = async (conversation: Conversation) => {
+    try {
+      setIsLoadingMessages(true);
+      
+      // Define a conversa selecionada imediatamente
+      setSelectedConversation(conversation);
+      
+      // Se estiver em mobile, muda para a view do chat
+      if (isMobile) {
+        setCurrentView('chat');
+      }
+      
+      // Depois busca os detalhes da conversa
+      await fetchConversationDetails(conversation.identifier);
+    } catch (error) {
+      console.error('Erro ao abrir conversa:', error);
+      // Em caso de erro, volta para a view anterior em mobile
+      if (isMobile) {
+        setCurrentView('conversations');
+      }
+    }
+  };
+
+  const handleBackToConversations = () => {
+    setCurrentView('conversations');
+    setSelectedConversation(null);
+    setMessages([]);
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+  };
+
+  const handleMobileNavigation = (view: 'dashboard' | 'conversations' | 'chat') => {
+    setCurrentView(view);
+    if (view === 'conversations') {
+      // Não limpa a conversa selecionada, apenas muda a view
+      // Isso permite que o usuário volte ao chat facilmente
+    }
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <div className="admin-panel">
       <header className="header">
         <div className="header-left">
+          <button 
+            className={`hamburger-menu ${isMenuOpen ? 'open' : ''}`}
+            onClick={toggleMenu}
+          >
+            <div className="hamburger-line"></div>
+            <div className="hamburger-line"></div>
+            <div className="hamburger-line"></div>
+          </button>
+          
           <div className="logo">
             <div className="logo-icon">
               <Icons.MessageCircle />
@@ -358,62 +433,77 @@ const ModernAdminPanel: React.FC = () => {
         </div>
       </header>
 
-      <div className="stats-container">
-        <div className="stat-card">
-          <div className="stat-icon-wrapper total">
-            <Icons.ChatBubble />
-          </div>
-          <div className="stat-content">
-            <p className="stat-title">Total de Conversas</p>
-            <h2 className="stat-value">{stats.total}</h2>
-            <div className="stat-trend up">
-              <Icons.ArrowUp /> 12% esta semana
+      {(!isMobile || currentView === 'dashboard') && (
+        <div className="stats-container">
+          <div className="stat-card">
+            <div className="stat-icon-wrapper total">
+              <Icons.ChatBubble />
+            </div>
+            <div className="stat-content">
+              <p className="stat-title">Total de Conversas</p>
+              <h2 className="stat-value">{stats.total}</h2>
+              <div className="stat-trend up">
+                <Icons.ArrowUp /> 12% esta semana
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon-wrapper active">
-            <Icons.Check />
-          </div>
-          <div className="stat-content">
-            <p className="stat-title">Conversas Ativas</p>
-            <h2 className="stat-value">{stats.active}</h2>
-            <div className="stat-trend up">
-              <Icons.ArrowUp /> 8% esta semana
+          <div className="stat-card">
+            <div className="stat-icon-wrapper active">
+              <Icons.Check />
+            </div>
+            <div className="stat-content">
+              <p className="stat-title">Conversas Ativas</p>
+              <h2 className="stat-value">{stats.active}</h2>
+              <div className="stat-trend up">
+                <Icons.ArrowUp /> 8% esta semana
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon-wrapper paused">
-            <Icons.Pause />
-          </div>
-          <div className="stat-content">
-            <p className="stat-title">Conversas Pausadas</p>
-            <h2 className="stat-value">{stats.paused}</h2>
-            <div className="stat-trend down">
-              <Icons.ArrowUp style={{ transform: 'rotate(180deg)' }} /> 3% esta semana
+          <div className="stat-card">
+            <div className="stat-icon-wrapper paused">
+              <Icons.Pause />
+            </div>
+            <div className="stat-content">
+              <p className="stat-title">Conversas Pausadas</p>
+              <h2 className="stat-value">{stats.paused}</h2>
+              <div className="stat-trend down">
+                <Icons.ArrowUp style={{ transform: 'rotate(180deg)' }} /> 3% esta semana
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon-wrapper rate">
-            <Icons.BarChart />
-          </div>
-          <div className="stat-content">
-            <p className="stat-title">Taxa de Resposta</p>
-            <h2 className="stat-value">{stats.responseRate}%</h2>
-            <div className="stat-trend up">
-              <Icons.ArrowUp /> 2.5% esta semana
+          <div className="stat-card">
+            <div className="stat-icon-wrapper rate">
+              <Icons.BarChart />
+            </div>
+            <div className="stat-content">
+              <p className="stat-title">Taxa de Resposta</p>
+              <h2 className="stat-value">{stats.responseRate}%</h2>
+              <div className="stat-trend up">
+                <Icons.ArrowUp /> 2.5% esta semana
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="main-content">
-        <div className="conversations-list">
+        <div 
+          className={`conversations-list ${
+            isMobile 
+              ? (currentView === 'conversations' ? '' : 'mobile-hidden')
+              : ''
+          }`}
+        >
+          {isMobile && currentView === 'conversations' && (
+            <button className="mobile-back-button" onClick={handleBackToDashboard}>
+              <Icons.ArrowUp style={{ transform: 'rotate(-90deg)' }} />
+              Voltar
+            </button>
+          )}
+          
           <div className="list-header">
             <h2 className="list-title">Conversas</h2>
             <button className="icon-btn">
@@ -446,7 +536,7 @@ const ModernAdminPanel: React.FC = () => {
                 <div 
                   key={conversation.id} 
                   className={`conversation-item ${selectedConversation?.id === conversation.id ? 'selected' : ''}`}
-                  onClick={() => fetchConversationDetails(conversation.identifier)}
+                  onClick={() => handleConversationClick(conversation)}
                 >
                   <div className="user-avatar">
                     <span className="avatar-text">{getInitials(conversation.identifier)}</span>
@@ -501,9 +591,22 @@ const ModernAdminPanel: React.FC = () => {
           </div>
         </div>
 
-        <div className="conversation-details-panel">
+        <div 
+          className={`conversation-details-panel ${
+            isMobile 
+              ? (currentView === 'chat' ? '' : 'mobile-hidden')
+              : ''
+          }`}
+        >
           {selectedConversation ? (
             <>
+              {isMobile && currentView === 'chat' && (
+                <button className="mobile-back-button" onClick={handleBackToConversations}>
+                  <Icons.ArrowUp style={{ transform: 'rotate(-90deg)' }} />
+                  Voltar às Conversas
+                </button>
+              )}
+              
               <div className="details-header">
                 <h2 className="details-title">
                   <div className="user-avatar" style={{ width: '2rem', height: '2rem' }}>
@@ -593,6 +696,47 @@ const ModernAdminPanel: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Navegação móvel na parte inferior */}
+      {isMobile && (
+        <div className="mobile-nav">
+          <div className="mobile-nav-tabs">
+            <button 
+              className={`mobile-nav-tab ${currentView === 'dashboard' ? 'active' : ''}`}
+              onClick={() => handleMobileNavigation('dashboard')}
+            >
+              <Icons.BarChart />
+              <span>Dashboard</span>
+            </button>
+            
+            <button 
+              className={`mobile-nav-tab ${currentView === 'conversations' ? 'active' : ''}`}
+              onClick={() => handleMobileNavigation('conversations')}
+            >
+              <Icons.MessageCircle />
+              <span>Conversas</span>
+            </button>
+            
+            {selectedConversation && (
+              <button 
+                className={`mobile-nav-tab ${currentView === 'chat' ? 'active' : ''}`}
+                onClick={() => handleMobileNavigation('chat')}
+              >
+                <Icons.ChatBubble />
+                <span>Chat</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Overlay para menu móvel */}
+      {isMobile && isMenuOpen && (
+        <div 
+          className="mobile-sidebar-overlay open"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
 
       {configClient && (
         <ConfigModal 
