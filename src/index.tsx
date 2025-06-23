@@ -4,6 +4,10 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// Aplica o dark mode imediatamente na inicialização
+document.documentElement.setAttribute('data-theme', 'dark');
+localStorage.setItem('theme', 'dark');
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );

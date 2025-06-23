@@ -568,7 +568,7 @@ const ModernAdminPanel: React.FC = () => {
                   </div>
                 )}
                 
-                <form className="reply-box" onSubmit={handleSendMessage}>
+                {/* <form className="reply-box" onSubmit={handleSendMessage}>
                   <input
                     type="text"
                     className="reply-input"
@@ -579,7 +579,7 @@ const ModernAdminPanel: React.FC = () => {
                   <button type="submit" className="reply-button">
                     <Icons.SendMessage />
                   </button>
-                </form>
+                </form> */}
               </div>
             </>
           ) : (

@@ -6,16 +6,20 @@ interface ThemeToggleProps {
 }
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '' }) => {
-  // Detecta o tema inicial do sistema ou usa o armazenado no localStorage
+  // Sempre inicia em modo escuro (dark mode)
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme === 'dark';
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Sempre retorna true para iniciar em dark mode
+    return true;
   });
 
-  // Aplica o tema quando o componente é montado e quando o tema muda
+  // Aplica o tema escuro imediatamente ao montar o componente
+  useEffect(() => {
+    // Força o dark mode na inicialização
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }, []); // Executa apenas uma vez na montagem
+
+  // Aplica o tema quando o tema muda
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.setAttribute('data-theme', 'dark');
